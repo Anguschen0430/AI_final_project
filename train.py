@@ -1,6 +1,6 @@
 from tensorflow.keras.utils import to_categorical
 import libro as lf
-import models
+from lstm import LSTM
 import numpy as np
 import configs
 
@@ -23,7 +23,7 @@ def train(config) -> None:
     # y_train, y_test (n_samples)
 
     # 搭建模型
-    model = models.make(config=config, n_feats=x_train.shape[1])
+    model = LSTM.make(x_train.shape[1],configs.rnn_size, configs.hidden_size, configs.dropout, configs.nums_labels, configs.lr)
 
     # 训练模型
     print('----- start training', config.model, '-----')

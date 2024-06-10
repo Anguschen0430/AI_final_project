@@ -1,6 +1,7 @@
 # Ignore compiled Python files
 *.pyc
 __pycache__
+checkpoint
 
 .DS_Store
 

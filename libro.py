@@ -10,7 +10,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 import joblib
-import utils
+# import utils
 
 def features(X, sample_rate: float) -> np.ndarray:
     stft = np.abs(librosa.stft(X))
@@ -159,7 +159,9 @@ def load_feature(config, train: bool) -> Union[Tuple[np.ndarray], np.ndarray]:
         # 标准化数据
         scaler = StandardScaler().fit(X)
         # 保存标准化模型
-        utils.mkdirs(config.checkpoint_path)
+        if not os.path.exists(config.checkpoint_path):
+            os.makedirs(config.checkpoint_path)
+        
         joblib.dump(scaler, scaler_path)
         X = scaler.transform(X)
 
@@ -208,7 +210,9 @@ def get_data(config, data_path: str, train: bool) -> Union[Tuple[np.ndarray], np
         mfcc_data = [[data_path, features, -1]]
 
     
-    utils.mkdirs(config.feature_folder)
+    
+    if not os.path.exists(config.feature_folder):
+        os.makedirs(config.feature_folder)
     # save feature on features/8-category
     feature_path = os.path.join(config.feature_folder, "train.p" if train == True else "predict.p")
     # 保存特征

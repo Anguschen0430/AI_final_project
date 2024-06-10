@@ -15,15 +15,16 @@ class_labels = ["neutral", "calm", "happy", "sad", "angry", "fearful", "disgust"
 #   - "06"  # Fearful
 #   - "07"  # Disgust
 #   - "08"  # Surprised
+nums_labels = 8
 
 # 特徵
 feature_folder = "features/8-category"  # 特徵存儲文件夾
-feature_method = "l"  # 'o': opensmile, 'l': librosa  # 特徵提取方式
+feature_method = "l"  # IF 
 
 
 # 檢查點
 checkpoint_path = "checkpoints/"  # 檢查點存儲路徑
-checkpoint_name = "LSTM_LIBROSA_IS10"  # 檢查點文件名
+checkpoint_name = "check_point_lstm"  # 檢查點文件名
 
 # 訓練參數
 epochs = 20  # 訓練的 epoch 數量

@@ -1,10 +1,73 @@
+from tensorflow.keras.layers import LSTM as KERAS_LSTM
+from tensorflow.keras.layers import Dense, Dropout
+from tensorflow.keras.models import Sequential, model_from_json
+from tensorflow.keras.optimizers import Adam
+
 import os
-from typing import Optional
+from typing import Optional, Union
 from abc import ABC, abstractmethod
 import numpy as np
-from tensorflow.keras.models import Sequential, model_from_json
-from ..base import BaseModel
-from utils import curve
+from sklearn.metrics import accuracy_score
+from sklearn.base import BaseEstimator
+import plot 
+
+class BaseModel(ABC):
+    """所有模型的基础类"""
+
+    def __init__(
+        self,
+        model: Union[Sequential, BaseEstimator],
+        trained: bool = False
+    ) -> None:
+        self.model = model
+        self.trained = trained  # 模型是否已训练
+
+    @abstractmethod
+    def train(self) -> None:
+        """训练模型"""
+        pass
+
+    @abstractmethod
+    def predict(self, samples: np.ndarray) -> np.ndarray:
+        """预测音频的情感"""
+        pass
+
+    @abstractmethod
+    def predict_proba(self, samples: np.ndarray) -> np.ndarray:
+        """预测音频的情感的置信概率"""
+        pass
+
+    @abstractmethod
+    def save(self, path: str, name: str) -> None:
+        """保存模型"""
+        pass
+
+    @classmethod
+    @abstractmethod
+    def load(cls, path: str, name: str):
+        """加载模型"""
+        pass
+
+    @classmethod
+    @abstractmethod
+    def make(cls):
+        """搭建模型"""
+        pass
+
+    def evaluate(self, x_test: np.ndarray, y_test: np.ndarray) -> None:
+        """
+        在测试集上评估模型，输出准确率
+
+        Args:
+            x_test (np.ndarray): 样本
+            y_test (np.ndarray): 标签（ground truth）
+        """
+        predictions = self.predict(x_test)
+        accuracy = accuracy_score(y_pred=predictions, y_true=y_test)
+        # accuracy = self.model.score(x_test, y_test)
+        print('Accuracy: %.3f\n' % accuracy)
+
+        return accuracy
 
 class DNN(BaseModel, ABC):
     """
@@ -95,8 +158,8 @@ class DNN(BaseModel, ABC):
         val_acc = history.history["val_accuracy"]
         val_loss = history.history["val_loss"]
 
-        curve(acc, val_acc, "Accuracy", "acc")
-        curve(loss, val_loss, "Loss", "loss")
+        plot.curve(acc, val_acc, "Accuracy", "acc")
+        plot.curve(loss, val_loss, "Loss", "loss")
 
         self.trained = True
 
@@ -137,3 +200,49 @@ class DNN(BaseModel, ABC):
     @abstractmethod
     def reshape_input(self):
         pass
+
+
+class LSTM(DNN):
+    def __init__(self, model: Sequential, trained: bool = False) -> None:
+        super(LSTM, self).__init__(model, trained)
+
+    @classmethod
+    def make(
+        cls,
+        input_shape: int,
+        rnn_size: int,
+        hidden_size: int,
+        dropout: float ,
+        n_classes: int ,
+        lr: float
+    ):
+        """
+        搭建模型
+
+        Args:
+            input_shape (int): 特征维度
+            rnn_size (int): LSTM 隐藏层大小
+            hidden_size (int): 全连接层大小
+            dropout (float, optional, default=0.5): dropout
+            n_classes (int, optional, default=8): 标签种类数量
+            lr (float, optional, default=0.001): 学习率
+        """
+        model = Sequential()
+
+        model.add(KERAS_LSTM(rnn_size, input_shape=(1, input_shape)))  # (time_steps = 1, n_feats)
+        model.add(Dropout(dropout))
+        model.add(Dense(hidden_size, activation='relu'))
+        # model.add(Dense(rnn_size, activation='tanh'))
+
+        model.add(Dense(n_classes, activation='softmax'))  # 分类层
+        optimzer = Adam(lr=lr)
+        model.compile(loss='categorical_crossentropy', optimizer=optimzer, metrics=['accuracy'])
+
+        return cls(model)
+
+    def reshape_input(self, data: np.ndarray) -> np.ndarray:
+        """二维数组转三维"""
+        # (n_samples, n_feats) -> (n_samples, time_steps = 1, input_size = n_feats)
+        # time_steps * input_size = n_feats
+        data = np.reshape(data, (data.shape[0], 1, data.shape[1]))
+        return data

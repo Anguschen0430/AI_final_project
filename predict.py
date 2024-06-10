@@ -2,8 +2,8 @@ import os
 import numpy as np
 # from libro import libro as lf
 import libro as lf
-import models
-import utils
+from lstm import DNN
+import plot
 import configs
 import warnings
 warnings.filterwarnings("ignore")
@@ -20,7 +20,7 @@ def predict(config, audio_path: str, model) -> None:
     result_prob = model.predict_proba(test_feature)
     print('Recogntion: ', config.class_labels[int(result)])
     print('Probability: ', result_prob)
-    utils.radar(result_prob, config.class_labels)
+    plot.radar(result_prob, config.class_labels)
 
 
 if __name__ == '__main__':
@@ -32,5 +32,5 @@ if __name__ == '__main__':
     # else:
     #     print("文件不存在")
     # config = utils.parse_opt()
-    model = models.load(configs)
+    model = DNN.load(configs.checkpoint_path,configs.checkpoint_name)
     predict(configs, audio_path, model)
