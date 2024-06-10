@@ -1,8 +1,8 @@
 # Ignore compiled Python files
 *.pyc
 __pycache__
-checkpoint
-
+checkpoints
+features/
 .DS_Store
 
 test

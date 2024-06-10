@@ -2,7 +2,7 @@ import os
 import numpy as np
 # from libro import libro as lf
 import libro as lf
-from lstm import DNN
+from lstm import DNN, LSTM
 import plot
 import configs
 import warnings
@@ -32,5 +32,7 @@ if __name__ == '__main__':
     # else:
     #     print("文件不存在")
     # config = utils.parse_opt()
-    model = DNN.load(configs.checkpoint_path,configs.checkpoint_name)
+    # 搭建模型
+
+    model = LSTM.load(configs.checkpoint_path,configs.checkpoint_name)
     predict(configs, audio_path, model)
