@@ -10,12 +10,11 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 import joblib
-# import utils
 
 def features(X, sample_rate: float) -> np.ndarray:
     stft = np.abs(librosa.stft(X))
 
-    # fmin 和 fmax 对应于人类语音的最小最大基本频率
+    # fmin and fmax correspond to the minimum and maximum fundamental frequencies of human speech
     pitches, magnitudes = librosa.piptrack(y=X, sr=sample_rate, S=stft, fmin=70, fmax=400)
     pitch = []
     for i in range(magnitudes.shape[1]):
@@ -28,31 +27,31 @@ def features(X, sample_rate: float) -> np.ndarray:
     pitchmax = np.max(pitch)
     pitchmin = np.min(pitch)
 
-    # 频谱质心
+    # Spectral centroid
     cent = librosa.feature.spectral_centroid(y=X, sr=sample_rate)
     cent = cent / np.sum(cent)
     meancent = np.mean(cent)
     stdcent = np.std(cent)
     maxcent = np.max(cent)
 
-    # 谱平面
+    # Spectral flatness
     flatness = np.mean(librosa.feature.spectral_flatness(y=X))
 
-    # 使用系数为50的MFCC特征
+    # MFCC features with 50 coefficients
     mfccs = np.mean(librosa.feature.mfcc(y=X, sr=sample_rate, n_mfcc=50).T, axis=0)
     mfccsstd = np.std(librosa.feature.mfcc(y=X, sr=sample_rate, n_mfcc=50).T, axis=0)
     mfccmax = np.max(librosa.feature.mfcc(y=X, sr=sample_rate, n_mfcc=50).T, axis=0)
 
-    # 色谱图
+    # Chromagram
     chroma = np.mean(librosa.feature.chroma_stft(S=stft, sr=sample_rate).T, axis=0)
 
-    # 梅尔频率
+    # Mel frequency
     mel = np.mean(librosa.feature.melspectrogram(y=X, sr=sample_rate).T, axis=0)
 
-    # ottava对比
+    # Spectral contrast
     contrast = np.mean(librosa.feature.spectral_contrast(S=stft, sr=sample_rate).T, axis=0)
 
-    # 过零率
+    # Zero-crossing rate
     zerocr = np.mean(librosa.feature.zero_crossing_rate(X))
 
     S, phase = librosa.magphase(stft)
@@ -60,7 +59,7 @@ def features(X, sample_rate: float) -> np.ndarray:
     stdMagnitude = np.std(S)
     maxMagnitude = np.max(S)
 
-    # 均方根能量
+    # Root mean square energy
     rmse = librosa.feature.rms(S=S)[0]
     meanrms = np.mean(rmse)
     stdrms = np.std(rmse)
@@ -98,26 +97,18 @@ def get_max_min(files: list) -> Tuple[float]:
     return max_, min_
 
 def get_data_path(data_path: str, class_labels: list) -> list:
-    """
-    获取所有音频的路径
 
-    Args:
-        data_path (str): 数据集文件夹路径
-        class_labels (list): 情感标签
-    Returns:
-        wav_file_path (list): 所有音频的路径
-    """
     wav_file_path = []
 
     cur_dir = os.getcwd()
     sys.stderr.write('Curdir: %s\n' % cur_dir)
     os.chdir(data_path)
 
-    # 遍历文件夹
+    # Iterate through folders
     for _, directory in enumerate(class_labels):
         os.chdir(directory)
 
-        # 读取该文件夹下的音频
+        # Read audio files in the folder
         for filename in os.listdir('.'):
             if not filename.endswith('wav'):
                 continue
@@ -131,17 +122,7 @@ def get_data_path(data_path: str, class_labels: list) -> list:
     return wav_file_path
 
 def load_feature(config, train: bool) -> Union[Tuple[np.ndarray], np.ndarray]:
-    """
-    从 "{config.feature_folder}/*.p" 文件中加载特征数据
 
-    Args:
-        config: 配置项
-        train (bool): 是否为训练数据
-
-    Returns:
-        - X (Tuple[np.ndarray]): 训练特征、测试特征和对应的标签
-        - X (np.ndarray): 预测特征
-    """
     feature_path = os.path.join(config.feature_folder, "train.p" if train == True else "predict.p")
 
     features = pd.DataFrame(
@@ -152,13 +133,13 @@ def load_feature(config, train: bool) -> Union[Tuple[np.ndarray], np.ndarray]:
     X = list(features['features'])
     Y = list(features['emotion'])
 
-    # 标准化模型路径
+    # Path to the standardization model
     scaler_path = os.path.join(config.checkpoint_path, 'SCALER_LIBROSA.m')
 
     if train == True:
-        # 标准化数据
+        # Standardize data
         scaler = StandardScaler().fit(X)
-        # 保存标准化模型
+        # Save the standardization model
         if not os.path.exists(config.checkpoint_path):
             os.makedirs(config.checkpoint_path)
         
@@ -169,53 +150,37 @@ def load_feature(config, train: bool) -> Union[Tuple[np.ndarray], np.ndarray]:
         return x_train, x_test, y_train, y_test
 
     else:
-        # 标准化数据
-        # 加载标准化模型
+        # Standardize data
+        # Load the standardization model
         scaler = joblib.load(scaler_path)
         X = scaler.transform(X)
         return X
 
 def get_data(config, data_path: str, train: bool) -> Union[Tuple[np.ndarray], np.ndarray]:
-    """
-    提取所有音频的特征: 遍历所有文件夹, 读取每个文件夹中的音频, 提取每个音频的特征，把所有特征
-    保存在 "{config.feature_folder}/*.p" 文件中。
 
-    Args:
-        config: 配置项
-        data_path (str): 数据集文件夹/测试文件路径
-        train (bool): 是否为训练数据
-
-    Returns:
-        - train = True: 训练特征、测试特征和对应的标签
-        - train = False: 预测特征
-    """
     if train:
             files = get_data_path(data_path, config.class_labels)
             max_, min_ = get_max_min(files)
 
             mfcc_data = []
             for file in files:
-                # 提取標籤，這裡假設標籤是文件名的特定部分
+                # Extract label, assuming the label is a specific part of the filename
                 filename = os.path.basename(file)
-                # 根據文件名結構提取標籤，假設標籤在文件名的第三部分
+                # Extract label from the filename structure, assuming the label is in the third part of the filename
                 label_str = filename.split('-')[2]
-                label = int(label_str) - 1  # 標籤從 0 開始
+                label = int(label_str) - 1  # Labels start from 0
                 
-                # label_index = config.class_labels.index(label)
                 features = extract_features(file, max_)
                 mfcc_data.append([file, features, label])
 
     else:
         features = extract_features(data_path)
         mfcc_data = [[data_path, features, -1]]
-
-    
     
     if not os.path.exists(config.feature_folder):
         os.makedirs(config.feature_folder)
-    # save feature on features/8-category
+    # Save features in features/8-category
     feature_path = os.path.join(config.feature_folder, "train.p" if train == True else "predict.p")
-    # 保存特征
     pickle.dump(mfcc_data, open(feature_path, 'wb'))
 
     return load_feature(config, train=train)

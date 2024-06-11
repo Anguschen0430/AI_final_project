@@ -3,6 +3,17 @@ import libro as lf
 from lstm import LSTM
 import numpy as np
 import configs
+import matplotlib.pyplot as plt
+
+def curve(train: list, val: list, title: str, y_label: str) -> None:
+
+    plt.plot(train)
+    plt.plot(val)
+    plt.title(title)
+    plt.ylabel(y_label)
+    plt.xlabel("epoch")
+    plt.legend(["train", "test"], loc="upper left")
+    plt.show()
 
 def train(config) -> None:
     """
@@ -23,6 +34,7 @@ def train(config) -> None:
     # y_train, y_test (n_samples)
 
     # 搭建模型
+    # print(x_train.shape[1])
     model = LSTM.make(x_train.shape[1],configs.rnn_size, configs.hidden_size, configs.dropout, configs.nums_labels, configs.lr)
 
     # 训练模型

@@ -9,7 +9,26 @@ from abc import ABC, abstractmethod
 import numpy as np
 from sklearn.metrics import accuracy_score
 from sklearn.base import BaseEstimator
-import plot 
+import matplotlib.pyplot as plt
+
+def curve(train: list, val: list, title: str, y_label: str) -> None:
+    """
+    绘制损失值和准确率曲线
+
+    Args:
+        train (list): 训练集损失值或准确率数组
+        val (list): 测试集损失值或准确率数组
+        title (str): 图像标题
+        y_label (str): y 轴标题
+    """
+    plt.plot(train)
+    plt.plot(val)
+    plt.title(title)
+    plt.ylabel(y_label)
+    plt.xlabel("epoch")
+    plt.legend(["train", "test"], loc="upper left")
+    plt.show()
+
 
 class BaseModel(ABC):
     """所有模型的基础类"""
@@ -158,8 +177,8 @@ class DNN(BaseModel, ABC):
         val_acc = history.history["val_accuracy"]
         val_loss = history.history["val_loss"]
 
-        plot.curve(acc, val_acc, "Accuracy", "acc")
-        plot.curve(loss, val_loss, "Loss", "loss")
+        curve(acc, val_acc, "Accuracy", "acc")
+        curve(loss, val_loss, "Loss", "loss")
 
         self.trained = True
 
@@ -228,7 +247,7 @@ class LSTM(DNN):
             lr (float, optional, default=0.001): 学习率
         """
         model = Sequential()
-
+        
         model.add(KERAS_LSTM(rnn_size, input_shape=(1, input_shape)))  # (time_steps = 1, n_feats)
         model.add(Dropout(dropout))
         model.add(Dense(hidden_size, activation='relu'))
@@ -237,7 +256,7 @@ class LSTM(DNN):
         model.add(Dense(n_classes, activation='softmax'))  # 分类层
         optimzer = Adam(lr=lr)
         model.compile(loss='categorical_crossentropy', optimizer=optimzer, metrics=['accuracy'])
-
+        
         return cls(model)
 
     def reshape_input(self, data: np.ndarray) -> np.ndarray:
