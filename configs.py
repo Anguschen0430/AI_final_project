@@ -1,11 +1,11 @@
 # config.py
 
-# 模型類型
+# data
 model = "lstm"
 
-# 數據集路徑
-data_path = "datasets"  # 數據集存儲位置
-class_labels = ["neutral", "calm", "happy", "sad", "angry", "fearful", "disgust", "surprised"]  # 情感標籤
+# dataset path 
+data_path = "datasets"  
+class_labels = ["neutral", "calm", "happy", "sad", "angry", "fearful", "disgust", "surprised"]  
 # class_labels:
 #   - "01"  # Neutral
 #   - "02"  # Calm
@@ -17,21 +17,21 @@ class_labels = ["neutral", "calm", "happy", "sad", "angry", "fearful", "disgust"
 #   - "08"  # Surprised
 nums_labels = 8
 
-# 特徵
-feature_folder = "features/8-category"  # 特徵存儲文件夾
-feature_method = "l"  # IF 
+# feature path
+feature_folder = "features/8-category" 
+feature_method = "l"  #use librosa
 
 
-# 檢查點
-checkpoint_path = "checkpoints/"  # 檢查點存儲路徑
-checkpoint_name = "check_point_lstm"  # 檢查點文件名
+# checkpoint path
+checkpoint_path = "checkpoints/"  
+checkpoint_name = "check_point_lstm"  
 
-# 訓練參數
-epochs = 20  # 訓練的 epoch 數量
-batch_size = 32  # 批次大小
-lr = 0.001  # 學習率
+# train configs
+epochs = 20  # number of epoch
+batch_size = 32  # batch size
+lr = 0.001  # learn rate
 
-# 模型參數
-rnn_size = 128  # LSTM 隱藏層大小
+# model set
+rnn_size = 128  # LSTM hidden layer size
 hidden_size = 32
 dropout = 0.5
